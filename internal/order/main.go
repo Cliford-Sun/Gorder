@@ -5,28 +5,37 @@ import (
 	"Gorder/internal/common/genproto/orderpb"
 	"Gorder/internal/common/server"
 	"Gorder/internal/order/ports"
+	"Gorder/internal/order/service"
+	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
-	"log"
 )
 
 func init() {
 	if err := config.NewViperConfig(); err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 }
 
 func main() {
 	serviceName := viper.GetString("order.service-name")
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	application := service.NewApplication(ctx)
+
 	go server.RunGrpcServer(serviceName, func(server *grpc.Server) {
-		service := ports.NewGRPCServer()
-		orderpb.RegisterOrderServiceServer(server, service)
+		svc := ports.NewGRPCServer(application)
+		orderpb.RegisterOrderServiceServer(server, svc)
 	})
 
 	server.RunHttpServer(serviceName, func(router *gin.Engine) {
-		ports.RegisterHandlersWithOptions(router, HTTPServer{}, ports.GinServerOptions{
+		ports.RegisterHandlersWithOptions(router, HTTPServer{
+			app: application,
+		}, ports.GinServerOptions{
 			BaseURL:      "/api",
 			Middlewares:  nil,
 			ErrorHandler: nil,

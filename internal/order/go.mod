@@ -1,6 +1,6 @@
 module Gorder/internal/order
 
-go 1.22.8
+go 1.23.7
 
 replace Gorder/internal/common => ../common
 

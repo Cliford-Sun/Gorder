@@ -41,7 +41,7 @@ func RunGrpcServerOnAddr(addr string, registerServer func(server *grpc.Server)) 
 	if err != nil {
 		logrus.Panic(err)
 	}
-	//logrus.Infof("grpc server listening on " + addr)
+	logrus.Infof("grpc server listening on " + addr)
 	if err := grpcServer.Serve(listen); err != nil {
 		logrus.Panic(err)
 	}
